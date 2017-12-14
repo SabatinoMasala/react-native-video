@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {StyleSheet, requireNativeComponent, NativeModules, View, ViewPropTypes, Image} from 'react-native';
+import {StyleSheet, requireNativeComponent, NativeModules, View, Image} from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import VideoResizeMode from './VideoResizeMode.js';
 
@@ -278,6 +278,7 @@ Video.propTypes = {
   volume: PropTypes.number,
   rate: PropTypes.number,
   playInBackground: PropTypes.bool,
+  allowsExternalPlayback: PropTypes.bool,
   playWhenInactive: PropTypes.bool,
   ignoreSilentSwitch: PropTypes.oneOf(['ignore', 'obey']),
   disableFocus: PropTypes.bool,
@@ -308,7 +309,7 @@ Video.propTypes = {
   translateX: PropTypes.number,
   translateY: PropTypes.number,
   rotation: PropTypes.number,
-  ...ViewPropTypes,
+  ...View.propTypes,
 };
 
 const RCTVideo = requireNativeComponent('RCTVideo', Video, {

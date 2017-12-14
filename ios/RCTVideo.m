@@ -43,6 +43,7 @@ static NSString *const timedMetadata = @"timedMetadata";
   BOOL _playbackStalled;
   BOOL _playInBackground;
   BOOL _playWhenInactive;
+  BOOL _allowsExternalPlayback;
   NSString * _ignoreSilentSwitch;
   NSString * _resizeMode;
   BOOL _fullscreenPlayerPresented;
@@ -67,6 +68,7 @@ static NSString *const timedMetadata = @"timedMetadata";
     _playerBufferEmpty = YES;
     _playInBackground = false;
     _playWhenInactive = false;
+    _allowsExternalPlayback = YES;
     _ignoreSilentSwitch = @"inherit"; // inherit, ignore, obey
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -188,9 +190,6 @@ static NSString *const timedMetadata = @"timedMetadata";
    CMTime currentTime = _player.currentTime;
    const Float64 duration = CMTimeGetSeconds(playerDuration);
    const Float64 currentTimeSecs = CMTimeGetSeconds(currentTime);
-
-   [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTVideo_progress" object:nil userInfo:@{@"progress": [NSNumber numberWithDouble: currentTimeSecs / duration]}];
-
    if( currentTimeSecs >= 0 && self.onVideoProgress) {
       self.onVideoProgress(@{
                              @"currentTime": [NSNumber numberWithFloat:CMTimeGetSeconds(currentTime)],
@@ -198,7 +197,7 @@ static NSString *const timedMetadata = @"timedMetadata";
                              @"atValue": [NSNumber numberWithLongLong:currentTime.value],
                              @"atTimescale": [NSNumber numberWithInt:currentTime.timescale],
                              @"target": self.reactTag,
-                             @"seekableDuration": [self calculateSeekableDuration],
+                             @"seekableDuration": [NSNumber numberWithFloat:CMTimeGetSeconds([self playerItemSeekableTimeRange].duration)],
                             });
    }
 }
@@ -226,16 +225,6 @@ static NSString *const timedMetadata = @"timedMetadata";
     }
   }
   return [NSNumber numberWithInteger:0];
-}
-
-- (NSNumber *)calculateSeekableDuration
-{
-    CMTimeRange timeRange = [self playerItemSeekableTimeRange];
-    if (CMTIME_IS_NUMERIC(timeRange.duration))
-    {
-        return [NSNumber numberWithFloat:CMTimeGetSeconds(timeRange.duration)];
-    }
-    return [NSNumber numberWithInteger:0];
 }
 
 - (void)addPlayerItemObservers
@@ -513,6 +502,12 @@ static NSString *const timedMetadata = @"timedMetadata";
   _playWhenInactive = playWhenInactive;
 }
 
+- (void)setAllowsExternalPlayback:(BOOL)allowsExternalPlayback
+{
+  _allowsExternalPlayback = allowsExternalPlayback;
+  _player.allowsExternalPlayback = _allowsExternalPlayback;
+}
+
 - (void)setIgnoreSilentSwitch:(NSString *)ignoreSilentSwitch
 {
   _ignoreSilentSwitch = ignoreSilentSwitch;
@@ -614,6 +609,7 @@ static NSString *const timedMetadata = @"timedMetadata";
   [self setRepeat:_repeat];
   [self setPaused:_paused];
   [self setControls:_controls];
+  [self setAllowsExternalPlayback:_allowsExternalPlayback];
 }
 
 - (void)setRepeat:(BOOL)repeat {
